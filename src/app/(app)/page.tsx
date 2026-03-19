@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Film, BookOpen } from "lucide-react";
+// No icon imports needed for tabs
 import AnimeCard from "@/components/AnimeCard";
 import AnimeDetailModal from "@/components/AnimeDetailModal";
 import NewsFeed from "@/components/NewsFeed";
@@ -12,8 +12,7 @@ import TopManga from "@/components/feed/TopManga";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 
-type ItemType = "anime" | "manga";
-type TabKey = "anime" | "manga";
+type ItemType = "anime";
 
 interface AnimeItem {
   mal_id: number;
@@ -29,14 +28,11 @@ interface Genre {
   name: string;
 }
 
-const tabs: { key: TabKey; tKey: string; icon: typeof Film }[] = [
-  { key: "anime", tKey: "animes", icon: Film },
-  { key: "manga", tKey: "mangas", icon: BookOpen },
-];
+// No tabs - feed shows anime by default
 
 export default function FeedPage() {
   const { t } = useLocale();
-  const [activeTab, setActiveTab] = useState<TabKey>("anime");
+  // Feed is anime-only
   const [items, setItems] = useState<AnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -49,18 +45,18 @@ export default function FeedPage() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [detailModal, setDetailModal] = useState<{ id: number; type: "anime" | "manga" } | null>(null);
 
-  const itemType: ItemType = activeTab === "manga" ? "manga" : "anime";
+  const itemType: ItemType = "anime";
 
   const fetchItems = useCallback(async (p: number) => {
     setLoading(true);
     try {
       let url: string;
       if (query) {
-        url = `/api/jikan/${itemType}/search?q=${encodeURIComponent(query)}&page=${p}&limit=14`;
+        url = `/api/jikan/${itemType}/search?q=${encodeURIComponent(query)}&page=${p}&limit=18`;
       } else if (selectedGenre) {
-        url = `/api/jikan/${itemType}/genre/${selectedGenre}?page=${p}&limit=14&order_by=${sortBy}&sort=${sortOrder}`;
+        url = `/api/jikan/${itemType}/genre/${selectedGenre}?page=${p}&limit=18&order_by=${sortBy}&sort=${sortOrder}`;
       } else {
-        url = `/api/jikan/${itemType}/popular?page=${p}&limit=14&order_by=${sortBy}&sort=${sortOrder}`;
+        url = `/api/jikan/${itemType}/popular?page=${p}&limit=18&order_by=${sortBy}&sort=${sortOrder}`;
       }
       const res = await fetch(url);
       const data = await res.json();
@@ -89,12 +85,7 @@ export default function FeedPage() {
       .catch(() => setGenres([]));
   }, [itemType]);
 
-  const handleTabChange = (tab: TabKey) => {
-    setActiveTab(tab);
-    setQuery("");
-    setSelectedGenre(null);
-    setPage(1);
-  };
+  // No tab change needed
 
   const handleSearch = () => {
     setSelectedGenre(null);
@@ -104,38 +95,13 @@ export default function FeedPage() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Tabs */}
-      <div className="flex border-b border-[#1E1A2B] bg-[#110F1A]">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => handleTabChange(tab.key)}
-            className={cn(
-              "relative flex items-center gap-2 px-7 py-3.5 text-[13px] font-medium transition-colors",
-              activeTab === tab.key
-                ? "text-[#7C3AED]"
-                : "text-[#6B6580] hover:text-[#A8A0B8]"
-            )}
-          >
-            <tab.icon className="h-4 w-4" />
-            {t(tab.tKey)}
-            {activeTab === tab.key && (
-              <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t bg-[#7C3AED]" />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Hidden elements for compatibility */}
-      <div style={{ display: "none" }}>
-        <select id="sort-select" value={`${sortBy}:${sortOrder}`} onChange={() => {}} />
-      </div>
+      {/* No tabs - direct content */}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {/* News */}
         {/* Feed sections - only show on default anime view */}
-        {!query && !selectedGenre && activeTab === "anime" && (
+        {!query && !selectedGenre && (
           <>
             <NewsFeed />
             <SeasonalAnime onDetail={(id, type) => setDetailModal({ id, type: type as "anime" | "manga" })} />
@@ -150,7 +116,7 @@ export default function FeedPage() {
             ? `${t("resultadosPara")} "${query}"`
             : selectedGenre
             ? genres.find((g) => g.id === selectedGenre)?.name
-            : `${t(itemType === "anime" ? "animes" : "mangas")} ${t("populares")}`}
+            : `${t("animes")} ${t("populares")}`}
         </h2>
 
         {loading ? (
@@ -163,7 +129,7 @@ export default function FeedPage() {
             <p className="text-sm">{t("nenhumResultado")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(175px,1fr))] gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {items.map((item) => (
               <AnimeCard
                 key={item.mal_id}

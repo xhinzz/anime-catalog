@@ -1,6 +1,5 @@
 "use client";
 
-import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useLocale } from "@/lib/locale-context";
@@ -18,7 +17,7 @@ interface AnimeCardProps {
   onDetails?: (id: number, type: string) => void;
 }
 
-const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='280' viewBox='0 0 200 280'%3E%3Crect fill='%2312151C' width='200' height='280'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236B6F85' font-family='sans-serif' font-size='13'%3ESem Imagem%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='280' viewBox='0 0 200 280'%3E%3Crect fill='%23161320' width='200' height='280'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236B6580' font-family='sans-serif' font-size='13'%3ESem Imagem%3C/text%3E%3C/svg%3E";
 
 export default function AnimeCard({
   mal_id, title, cover_url, score, type,
@@ -26,65 +25,71 @@ export default function AnimeCard({
   onToggleWatched, onToggleBookmark, onDetails,
 }: AnimeCardProps) {
   const [imgSrc, setImgSrc] = useState(cover_url || PLACEHOLDER);
-
   const { t } = useLocale();
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-[#1E1A2B] bg-[#161320] transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-      {/* Bookmark */}
+    <div
+      className="group relative overflow-hidden rounded-2xl cursor-pointer"
+      onClick={() => onDetails?.(mal_id, type)}
+    >
+      {/* Full image background */}
+      <div className="aspect-[3/4.3] overflow-hidden">
+        <img
+          src={imgSrc}
+          alt={title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => setImgSrc(PLACEHOLDER)}
+          loading="lazy"
+        />
+      </div>
+
+      {/* Gradient overlay - always visible at bottom, full on hover */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
+
+      {/* Score badge - top left */}
+      {score && (
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-md bg-black/60 backdrop-blur-sm px-2 py-1">
+          <span className="text-[11px] font-black text-[#F59E0B]">{score.toFixed(1)}</span>
+        </div>
+      )}
+
+      {/* Bookmark - top right */}
       {onToggleBookmark && (
         <button
-          onClick={() => onToggleBookmark(mal_id)}
+          onClick={(e) => { e.stopPropagation(); onToggleBookmark(mal_id); }}
           className={cn(
-            "absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full text-[14px] transition-all",
+            "absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-bold transition-all",
             isBookmarked
               ? "bg-[#7C3AED] text-white"
-              : "bg-black/50 text-white/60 opacity-0 group-hover:opacity-100 hover:bg-black/80"
+              : "bg-black/40 backdrop-blur-sm text-white/50 opacity-0 group-hover:opacity-100 hover:bg-[#7C3AED] hover:text-white"
           )}
         >
           {isBookmarked ? "✓" : "+"}
         </button>
       )}
 
-      {/* Image */}
-      <div className="aspect-[3/4.2] overflow-hidden">
-        <img
-          src={imgSrc}
-          alt={title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImgSrc(PLACEHOLDER)}
-          loading="lazy"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-col gap-2 p-3">
-        <h3 className="line-clamp-2 text-[13px] font-semibold leading-tight text-[#E8E4F4]">
+      {/* Content overlay - bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-3.5">
+        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-white drop-shadow-lg">
           {title}
         </h3>
-        {score && (
-          <div className="flex items-center gap-1 text-[12px] text-[#6B6580]">
-            <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />
-            {score.toFixed(1)}
-          </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex gap-1.5 mt-1">
+        {/* Action buttons - appear on hover */}
+        <div className="flex gap-1.5 mt-2.5 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
           <button
-            onClick={() => onDetails?.(mal_id, type)}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#7C3AED] px-2 py-1.5 text-[11px] font-semibold text-white uppercase tracking-wide transition-colors hover:bg-[#9B5CFF]"
+            onClick={(e) => { e.stopPropagation(); onDetails?.(mal_id, type); }}
+            className="flex flex-1 items-center justify-center rounded-lg bg-[#7C3AED] py-2 text-[10px] font-bold text-white uppercase tracking-wider hover:bg-[#9B5CFF] transition-colors"
           >
             {t("detalhes")}
           </button>
           {onToggleWatched && (
             <button
-              onClick={() => onToggleWatched(mal_id)}
+              onClick={(e) => { e.stopPropagation(); onToggleWatched(mal_id); }}
               className={cn(
-                "flex flex-1 items-center justify-center rounded-lg border px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-all",
+                "flex flex-1 items-center justify-center rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider transition-all",
                 isWatched
-                  ? "border-[#7C3AED] bg-[#7C3AED] text-white hover:bg-[#9B5CFF]"
-                  : "border-[#2A2538] text-[#6B6580] hover:border-[#7C3AED] hover:text-[#7C3AED]"
+                  ? "bg-white/20 backdrop-blur-sm text-white"
+                  : "bg-white/10 backdrop-blur-sm text-white/70 hover:bg-white/20 hover:text-white"
               )}
             >
               {isWatched ? t("visto") : t("assistir")}

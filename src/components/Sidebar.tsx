@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   Home, User, Search, Bell, ListChecks, Crown,
   Heart, HelpCircle, Settings, LogOut, LogIn,
 } from "lucide-react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/locale-context";
 import LocaleSwitch from "./LocaleSwitch";
+import Image from "next/image";
 
 const navItems = [
   { href: "/", icon: Home, tKey: "feed" },
@@ -28,6 +29,26 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { t } = useLocale();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // Fetch user profile for avatar
+  useEffect(() => {
+    if (session?.user) {
+      const username = (session.user as Record<string, unknown>).username as string;
+      if (username) {
+        fetch(`/api/users/${username}/profile`)
+          .then((r) => r.ok ? r.json() : null)
+          .then((d) => {
+            if (d) {
+              setAvatarUrl(d.profileImageUrl !== "/default-avatar.jpg" ? d.profileImageUrl : null);
+              setDisplayName(d.displayName);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [session]);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-[210px] flex-col border-r border-[#1E1A2B] bg-[#0D0B14]">
@@ -75,19 +96,24 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom */}
-      <div className="border-t border-[#1E1A2B] px-3 py-3 space-y-2">
+      {/* Bottom: locale + user */}
+      <div className="border-t border-[#1E1A2B] px-3 py-2">
         <LocaleSwitch />
       </div>
       <div className="border-t border-[#1E1A2B] px-3 py-3">
         {session ? (
           <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-white/[0.04]">
-            <div className="h-8 w-8 rounded-full bg-[#2A2538] overflow-hidden flex-shrink-0 flex items-center justify-center text-[#6B6580] text-[11px] font-bold">
-              {session.user?.name?.charAt(0).toUpperCase() || "?"}
-            </div>
+            {/* Avatar */}
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-[#7C3AED]/20 flex-shrink-0 flex items-center justify-center text-[#7C3AED] text-[12px] font-bold">
+                {session.user?.name?.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-[12px] font-semibold text-white truncate">
-                {session.user?.name}
+                {displayName || session.user?.name}
               </p>
               <p className="text-[10px] text-[#6B6580] truncate">
                 @{session.user?.name}
