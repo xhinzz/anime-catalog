@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  username         String   @unique
+  email            String   @unique
+  passwordHash     String
+  createdAt        DateTime @default(now())
+  displayName      String?
+  profileImageFile String   @default("default.jpg")
+  bio              String   @default("")
+  bannerImageFile  String?
+  bannerPositionY  Int      @default(50)
+  accentColor      String   @default("#7C3AED")
+  borderColor      String?
+  colorBackground  String?
+  colorCard        String?
+  colorText        String?
+  colorTextSecondary String?
+
+  // Email verification
+  emailVerified     Boolean  @default(false)
+  verificationCode  String?
+  verificationExpiry DateTime?
+
+  // Discord integration
+  discordId       String?  @unique
+  discordUsername String?
+  discordAvatar   String?
+
+  lists             UserList[]
+  watchedItems      WatchedItem[]
+  watchLaterItems   WatchLaterItem[]
+  ratings           UserRating[]
+  favorites         FavoriteItem[]
+  currentlyWatching CurrentlyWatching[]
+  profileLikesGiven ProfileLike[] @relation("Liker")
+  profileLikesReceived ProfileLike[] @relation("ProfileOwner")
+  following         Follow[] @relation("Follower")
+  followers         Follow[] @relation("Followed")
+  activities        Activity[]
+}
+
+model Follow {
+  id         Int      @id @default(autoincrement())
+  followerId Int
+  followedId Int
+  createdAt  DateTime @default(now())
+  follower   User     @relation("Follower", fields: [followerId], references: [id])
+  followed   User     @relation("Followed", fields: [followedId], references: [id])
+
+  @@unique([followerId, followedId])
+}
+
+model ProfileLike {
+  id            Int      @id @default(autoincrement())
+  likerId       Int
+  profileUserId Int
+  createdAt     DateTime @default(now())
+  liker         User     @relation("Liker", fields: [likerId], references: [id])
+  profileOwner  User     @relation("ProfileOwner", fields: [profileUserId], references: [id])
+
+  @@unique([likerId, profileUserId])
+}
+
+model WatchedItem {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  itemMalId    Int
+  itemType     String   // 'anime' or 'manga'
+  itemTitle    String?
+  itemImageUrl String?
+  itemScore    Float?
+  watchedAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemMalId, itemType])
+}
+
+model WatchLaterItem {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  itemMalId    Int
+  itemType     String
+  itemTitle    String?
+  itemImageUrl String?
+  itemScore    Float?
+  addedAt      DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemMalId, itemType])
+}
+
+model UserRating {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  itemMalId Int
+  itemType  String
+  stars     Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemMalId, itemType])
+}
+
+model FavoriteItem {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  itemMalId    Int
+  itemType     String
+  itemTitle    String?
+  itemImageUrl String?
+  position     Int      @default(0)
+  addedAt      DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemMalId, itemType])
+}
+
+model CurrentlyWatching {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  itemMalId      Int
+  itemType       String
+  itemTitle      String?
+  itemImageUrl   String?
+  totalEpisodes  Int?
+  currentEpisode Int      @default(0)
+  startedAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemMalId, itemType])
+}
+
+model Activity {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  action       String
+  itemMalId    Int?
+  itemType     String?
+  itemTitle    String?
+  itemImageUrl String?
+  extra        String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model UserList {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  name        String
+  description String     @default("")
+  isPublic    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  items       ListItem[]
+}
+
+model ListItem {
+  id           Int      @id @default(autoincrement())
+  listId       Int
+  itemMalId    Int
+  itemType     String
+  itemTitle    String?
+  itemImageUrl String?
+  position     Int      @default(0)
+  addedAt      DateTime @default(now())
+  list         UserList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, itemMalId, itemType])
+}

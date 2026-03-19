@@ -1,0 +1,23 @@
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  try {
+    await new Promise((r) => setTimeout(r, 300));
+    const res = await fetch("https://api.jikan.moe/v4/seasons/now?limit=12&order_by=score&sort=desc", {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return NextResponse.json({ items: [] });
+    const data = await res.json();
+    const items = (data.data || []).map((d: Record<string, unknown>) => ({
+      mal_id: d.mal_id,
+      title: (d as Record<string, string>).title_english || d.title,
+      cover_url: ((d.images as Record<string, Record<string, string>>)?.jpg?.large_image_url) || "",
+      score: d.score || null,
+      episodes: d.episodes || null,
+      type: d.type || "TV",
+    }));
+    return NextResponse.json({ items });
+  } catch {
+    return NextResponse.json({ items: [] });
+  }
+}
