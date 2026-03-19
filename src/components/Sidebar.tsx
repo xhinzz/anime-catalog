@@ -82,13 +82,8 @@ export default function Sidebar() {
       <div className="border-t border-[#1E1A2B] px-3 py-3">
         {session ? (
           <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-white/[0.04]">
-            <div className="h-8 w-8 rounded-full bg-[#161320] overflow-hidden flex-shrink-0">
-              <img
-                src="/default-avatar.jpg"
-                alt=""
-                className="h-full w-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/default-avatar.jpg"; }}
-              />
+            <div className="h-8 w-8 rounded-full bg-[#2A2538] overflow-hidden flex-shrink-0 flex items-center justify-center text-[#6B6580] text-[11px] font-bold">
+              {session.user?.name?.charAt(0).toUpperCase() || "?"}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[12px] font-semibold text-white truncate">
