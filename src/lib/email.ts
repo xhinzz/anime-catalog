@@ -1,9 +1,19 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init - only create when actually sending
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error("RESEND_API_KEY not configured");
+    resend = new Resend(key);
+  }
+  return resend;
+}
 
 export async function sendVerificationEmail(email: string, code: string, username: string) {
-  const { error } = await resend.emails.send({
+  const r = getResend();
+  const { error } = await r.emails.send({
     from: process.env.RESEND_FROM_EMAIL || "AnimeList <onboarding@resend.dev>",
     to: email,
     subject: "Verifique seu email - AnimeList",
