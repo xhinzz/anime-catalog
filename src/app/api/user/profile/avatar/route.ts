@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { supabase, getStorageUrl } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -15,14 +14,21 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ success: false, message: "No file" }, { status: 400 });
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const filename = `user_${userId}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads", "avatars");
-  await mkdir(dir, { recursive: true });
+  const filename = `avatars/user_${userId}.${ext}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(dir, filename), buffer);
+
+  const { error } = await supabase.storage
+    .from("uploads")
+    .upload(filename, buffer, { contentType: file.type, upsert: true });
+
+  if (error) {
+    console.error("Supabase upload error:", error);
+    return NextResponse.json({ success: false, message: "Upload failed" }, { status: 500 });
+  }
 
   await prisma.user.update({ where: { id: userId }, data: { profileImageFile: filename } });
 
-  return NextResponse.json({ success: true, url: `/uploads/avatars/${filename}?t=${Date.now()}` });
+  const url = getStorageUrl("uploads", filename);
+  return NextResponse.json({ success: true, url: `${url}?t=${Date.now()}` });
 }

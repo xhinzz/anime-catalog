@@ -84,7 +84,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-white/[0.04]">
             <div className="h-8 w-8 rounded-full bg-[#161320] overflow-hidden flex-shrink-0">
               <img
-                src={`/uploads/avatars/${session.user?.image || "default.jpg"}`}
+                src="/default-avatar.jpg"
                 alt=""
                 className="h-full w-full object-cover"
                 onError={(e) => { (e.target as HTMLImageElement).src = "/default-avatar.jpg"; }}

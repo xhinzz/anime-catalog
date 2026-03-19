@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getStorageUrl } from "@/lib/supabase";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -47,8 +48,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
     colorCard: user.colorCard,
     colorText: user.colorText,
     colorTextSecondary: user.colorTextSecondary,
-    profileImageUrl: `/uploads/avatars/${user.profileImageFile || "default.jpg"}`,
-    bannerUrl: user.bannerImageFile ? `/uploads/banners/${user.bannerImageFile}` : null,
+    profileImageUrl: user.profileImageFile && user.profileImageFile !== "default.jpg"
+      ? getStorageUrl("uploads", user.profileImageFile) || "/default-avatar.jpg"
+      : "/default-avatar.jpg",
+    bannerUrl: user.bannerImageFile ? getStorageUrl("uploads", user.bannerImageFile) : null,
     bannerPositionY: user.bannerPositionY ?? 50,
     createdAt: user.createdAt.toISOString(),
     emailVerified: user.emailVerified,
