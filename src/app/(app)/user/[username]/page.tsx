@@ -653,10 +653,10 @@ export default function ProfilePage() {
                         {a.itemTitle && (
                           <p className="mt-0.5 text-[13px] font-medium text-[#A8A0B8] line-clamp-1">{a.itemTitle}</p>
                         )}
-                        {a.extra?.stars && (
+                        {typeof a.extra?.stars === "number" && (
                           <div className="mt-1 flex gap-0.5">
                             {[1, 2, 3, 4, 5].map((s) => (
-                              <Star key={s} className={cn("h-3.5 w-3.5", (a.extra?.stars as number) >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#2A2538]")} />
+                              <Star key={s} className={cn("h-3.5 w-3.5", Number(a.extra?.stars) >= s ? "fill-[#F59E0B] text-[#F59E0B]" : "text-[#2A2538]")} />
                             ))}
                           </div>
                         )}
